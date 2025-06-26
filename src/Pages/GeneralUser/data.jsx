@@ -1,9 +1,14 @@
+
 import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 // Monthly Joined Members
-const getMonthlyJoined = async () => {
+const getMonthlyJoined = async (token) => {
   try {
-    const response = await axios.get("http://localhost:3002/members/monthly-member", {
+    const response = await axios.get(`${BASE_URL}/members/monthly-member`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       withCredentials: true,
     });
     return response.data;
@@ -14,9 +19,12 @@ const getMonthlyJoined = async () => {
 };
 
 // Expiring within 3 Days
-const threeDaysExpire = async () => {
+const threeDaysExpire = async (token) => {
   try {
-    const response = await axios.get("http://localhost:3002/members/within-3-days-expiring", {
+    const response = await axios.get(`${BASE_URL}/members/within-3-days-expiring`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       withCredentials: true,
     });
     return response.data;
@@ -27,9 +35,12 @@ const threeDaysExpire = async () => {
 };
 
 // Expiring within 4-7 Days
-const fourToSevenDaysExpire = async () => {
+const fourToSevenDaysExpire = async (token) => {
   try {
-    const response = await axios.get("http://localhost:3002/members/within-4-to-7-days-expiring", {
+    const response = await axios.get(`${BASE_URL}/members/within-4-to-7-days-expiring`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       withCredentials: true,
     });
     return response.data;
@@ -40,9 +51,12 @@ const fourToSevenDaysExpire = async () => {
 };
 
 // Expired Members
-const expiredData = async () => {
+const expiredData = async (token) => {
   try {
-    const response = await axios.get("http://localhost:3002/members/expired-members", {
+    const response = await axios.get(`${BASE_URL}/members/expired-members`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       withCredentials: true,
     });
     return response.data;
@@ -53,9 +67,12 @@ const expiredData = async () => {
 };
 
 // Inactive Members
-const inactiveMembers = async () => {
+const inactiveMembers = async (token) => {
   try {
-    const response = await axios.get("http://localhost:3002/members/inactive-members", {
+    const response = await axios.get(`${BASE_URL}/members/inactive-members`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       withCredentials: true,
     });
     return response.data;

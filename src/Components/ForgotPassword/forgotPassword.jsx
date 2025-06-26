@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ForgotPassword = () => {
   const [emailSubmit, setEmailSubmit] = useState(false);
@@ -33,7 +34,7 @@ const ForgotPassword = () => {
     setLoader(true);
     try {
       const res = await axios.post(
-        "http://localhost:3002/auth/reset-password/sendOtp",
+        `${BASE_URL}/auth/reset-password/sendOtp`,
         { email: inputField.email }
       );
       toast.success(res.data.message);
@@ -51,7 +52,7 @@ const ForgotPassword = () => {
     setLoader(true);
     try {
       const res = await axios.post(
-        "http://localhost:3002/auth/reset-password/verifyOtp",
+        `${BASE_URL}/auth/reset-password/verifyOtp`,
         {
           email: inputField.email,
           otp: inputField.otp,
@@ -72,7 +73,7 @@ const ForgotPassword = () => {
     setLoader(true);
     try {
       const res = await axios.post(
-        "http://localhost:3002/auth/reset-password/updatePassword",
+        `${BASE_URL}/auth/reset-password/updatePassword`,
         {
           email: inputField.email,
           newPassword: inputField.newPassword,

@@ -1,18 +1,25 @@
+
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Stack from "@mui/material/Stack";
 import LinearProgress from "@mui/material/LinearProgress";
-import {toast, ToastContainer}from 'react-toastify'
+import { toast, ToastContainer } from "react-toastify";
+import { useCookies } from "react-cookie";
+import "react-toastify/dist/ReactToastify.css";
+
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const AddMembers = () => {
+  const [cookies] = useCookies(["token"]);
   const [loaderImage, setLoaderImage] = useState(false);
   const [membershipList, setMembershipList] = useState([]);
-  const [selectedOption , setSelectedOption] = useState("");
+  const [selectedOption, setSelectedOption] = useState("");
   const [inputField, setInputField] = useState({
     name: "",
-    mobileNo: "", // corrected from mobilNo
+    mobileNo: "",
     address: "",
-    memberShip: "",
+    membership: "",
     profilePic: "",
     joiningDate: "",
   });
@@ -23,76 +30,88 @@ const AddMembers = () => {
 
   const uploadImage = async (event) => {
     const file = event.target.files[0];
-    if (!file) {
-      console.log("No file selected");
-      return;
-    }
+    if (!file) return;
 
-    setLoaderImage(true); // Start loader here
+    setLoaderImage(true);
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "gym-gms"); // Unsigned preset
+    data.append("upload_preset", "gym-gms");
 
     try {
-      const response = await axios.post(
+      const res = await axios.post(
         "https://api.cloudinary.com/v1_1/dehdpbk2h/image/upload",
         data
       );
-      const imageUrl = response.data.secure_url;
-      setInputField({ ...inputField, profilePic: imageUrl });
+      setInputField((prev) => ({
+        ...prev,
+        profilePic: res.data.secure_url,
+      }));
     } catch (err) {
-      console.error("Upload error:", err.response?.data || err.message);
+      console.error("Upload error:", err);
+      toast.error("Image upload failed.");
     } finally {
-      setLoaderImage(false); // Stop loader here
+      setLoaderImage(false);
     }
   };
-  const fetchMembership = async () => {
-    await axios
-      .get("http://localhost:3002/plans/get-membership", {
+
+  const fetchMembership = async (token) => {
+    try {
+      const res = await axios.get(`${BASE_URL}/plans/get-membership`, {
+        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
-      })
-      .then((res) => {
-        console.log(res);
-        setMembershipList(res.data.membership);
-        if(res.data.membership.length === 0){
-          return toast.error("No Membership Added Yet",{className:"text-lg"})
-        }else{
-          let a = res.data.membership[0]._id;
-          // setSelectedOption(a)
-          setInputField({...inputField, membership:a})
-        }
-        
-
-      })
-      .catch((err) => {
-        console.log(err);
-        toast.error("Something Went Wrong.")
       });
-  };
-  useEffect(() => {
-    console.log(inputField);
-    fetchMembership();
-  }, []);
 
-  const handleOnChangeSelect = (event)=>{
-    let value = event.target.value
-    setSelectedOption(value)
-    setInputField({...inputField, membership:value})
+      const memberships = res.data.membership;
+      setMembershipList(memberships);
+
+      if (memberships.length === 0) {
+        toast.error("No Membership Added Yet", { className: "text-lg" });
+      } else {
+        const defaultId = memberships[0]._id;
+        setSelectedOption(defaultId);
+        setInputField((prev) => ({ ...prev, membership: defaultId }));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch membership plans.");
+    }
   };
-  const handleRegisterBtn =async ()=>{
-    await axios.post("http://localhost:3002/members/register-member", inputField, {withCredentials:true}).then((res)=>{
+
+  useEffect(() => {
+    const token = cookies.token;
+    if (!token) {
+      toast.error("Unauthorized: Please log in.");
+      return;
+    }
+    fetchMembership(token);
+  }, [cookies]);
+
+  const handleOnChangeSelect = (event) => {
+    const value = event.target.value;
+    setSelectedOption(value);
+    setInputField((prev) => ({ ...prev, membership: value }));
+  };
+
+  const handleRegisterBtn = async () => {
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/members/register-member`,
+        inputField,
+        {
+          headers: { Authorization: `Bearer ${cookies.token}` },
+          withCredentials: true,
+        }
+      );
       console.log(res);
-      toast.success("Added Successfully.")
-      setTimeout(() => {
-        window.location.reload();
-      },2000);
-    }).catch(err=>{
-      console.log(err);
-      toast.error("Something Went Wrong.")
-      
-    })
-  }
+      toast.success("Added Successfully.");
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Something Went Wrong.");
+    }
+  };
+
   return (
     <div className="text-black">
       <div className="grid gap-5 grid-cols-2 text-lg">
@@ -129,27 +148,24 @@ const AddMembers = () => {
 
         <select
           value={selectedOption}
-          onChange={(e) => handleOnChangeSelect(e, "memberShip")}
-          className="border-2 w-[90%] h-12 pt-2 pb-2 border-slate-400 rounded-md">
-          {
-            membershipList.map((item , index)=>{
-              return (
-                <option key = {index} value={item._id}> {item.months} Moths Membership</option>
-              );
-            })
-          }
+          onChange={handleOnChangeSelect}
+          className="border-2 w-[90%] h-12 pt-2 pb-2 border-slate-400 rounded-md"
+        >
+          {membershipList.map((item, index) => (
+            <option key={index} value={item._id}>
+              {item.months} Months Membership
+            </option>
+          ))}
         </select>
 
         <input type="file" onChange={uploadImage} />
 
-        {/* Loader */}
         {loaderImage && (
           <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
             <LinearProgress color="secondary" />
           </Stack>
         )}
 
-        {/* Image Preview */}
         {inputField.profilePic && (
           <div className="w-32 h-32 relative">
             <img
@@ -160,11 +176,12 @@ const AddMembers = () => {
           </div>
         )}
 
-        {/* Submit Button */}
-        <div onClick={()=>handleRegisterBtn()} className="p-3 border-2 mt-5 w-28 text-lg h-14 text-center bg-slate-900 text-white rounded-xl cursor-pointer hover:bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+        <div
+          onClick={handleRegisterBtn}
+          className="p-3 border-2 mt-5 w-28 text-lg h-14 text-center bg-slate-900 text-white rounded-xl cursor-pointer hover:bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+        >
           Register
         </div>
-
       </div>
       <ToastContainer />
     </div>

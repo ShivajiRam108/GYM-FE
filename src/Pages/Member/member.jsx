@@ -8,10 +8,12 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MemberCurd from "../../Components/MemberCard/memberCard";
 import Model from "../../Components/Modal/modal";
-import AddMemberShip from "../../Components/Addmembership/addmemberShip";
-import AddMembers from "../../Components/Addmembers/addmembers";
+import AddMemberShip from "../../Components/AddMemberShip/AddMemberShip";
+import AddMembers from "../../Components/AddMembers/AddMembers";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import { useCookies } from "react-cookie";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Member = () => {
   const [addMembership, setMembership] = useState(false);
@@ -26,6 +28,7 @@ const Member = () => {
   const [isSearchModeOn, setIsSearchModeOn] = useState(false);
   const [noOfPage, setNoOfPage] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [cookies] = useCookies(["token"]);
 
   const limit = 9;
 
@@ -38,15 +41,21 @@ const Member = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:3002/members/all-mamber?skip=${limit}&limit=${skip}`,
-        { withCredentials: true }
+        // `${BASE_URL}/members/all-mamber?skip=0&limit=9`,
+        `${BASE_URL}/members/all-mamber?skip=${skip}&limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${cookies.token}`,
+          },
+          withCredentials: true, //  Must be inside the same object
+        }
       );
       const total = res.data.totalMembers;
       console.log("Total members fetched:", total);
       setTotalData(total);
 
       setData(res.data.members);
-console.log(totalData)
+      // console.log(totalData)
       const extraPage = total % limit === 0 ? 0 : 1;
       const totalPages = Math.floor(total / limit) + extraPage;
       setNoOfPage(totalPages);
@@ -66,8 +75,8 @@ console.log(totalData)
     }
   };
 
-  const handelMembership = () => setMembership(prev => !prev);
-  const handleMember = () => setAddMember(prev => !prev);
+  const handelMembership = () => setMembership((prev) => !prev);
+  const handleMember = () => setAddMember((prev) => !prev);
 
   const handlePrev = () => {
     if (currentPage !== 1) {
@@ -103,8 +112,13 @@ console.log(totalData)
       try {
         setLoading(true);
         const res = await axios.get(
-          `http://localhost:3002/members/searched-members?searchTerm=${search}`,
-          { withCredentials: true }
+          `${BASE_URL}/members/searched-members?searchTerm=${search}`,
+          {
+            headers:{
+              Authorization:`Bearer ${cookies.token}`,
+            },
+            withCredentials: true,
+          }
         );
         setData(res.data.member);
         setTotalData(res.data.totalMembers);
@@ -142,7 +156,10 @@ console.log(totalData)
       </div>
 
       {/* Back link */}
-      <Link to="/dashboard" className="block mt-4 text-blue-700 hover:underline">
+      <Link
+        to="/dashboard"
+        className="block mt-4 text-blue-700 hover:underline"
+      >
         <ArrowBackIcon /> Back to Dashboard
       </Link>
 
@@ -172,13 +189,17 @@ console.log(totalData)
               {startFrom + 1} - {endTo} of {totalData} Members
             </span>
             <button
-              className={`w-8 h-8 flex items-center justify-center border rounded hover:bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:text-black ${currentPage === 1 ? "bg-gray-200 text-gray-400" : ""}`}
+              className={`w-8 h-8 flex items-center justify-center border rounded hover:bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:text-black ${
+                currentPage === 1 ? "bg-gray-200 text-gray-400" : ""
+              }`}
               onClick={handlePrev}
             >
               <ChevronLeftIcon />
             </button>
             <button
-              className={`w-8 h-8 flex items-center justify-center border rounded hover:bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:text-black ${currentPage === noOfPage ? "bg-gray-200 text-gray-400" : ""}`}
+              className={`w-8 h-8 flex items-center justify-center border rounded hover:bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:text-black ${
+                currentPage === noOfPage ? "bg-gray-200 text-gray-400" : ""
+              }`}
               onClick={handleNext}
             >
               <ChevronRightIcon />
@@ -221,6 +242,5 @@ console.log(totalData)
     </div>
   );
 };
-
 
 export default Member;

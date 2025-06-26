@@ -9,6 +9,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import "react-toastify/dist/ReactToastify.css";
 
+
 function App() {
   const [isLogin, setIsLogin] = useState(false);
   const navigate = useNavigate();
@@ -22,11 +23,11 @@ function App() {
       setIsLogin(false);
       navigate("/");
     }
-  }, [sessionStorage.getItem("isLogin")]); // ⚠ Not recommended, but okay for now
+  }, [sessionStorage.getItem("isLogin")]); //  Not recommended, but okay for now
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* ✅ Show Header only when logged in */}
+      {/*  Show Header only when logged in */}
       {isLogin && <Header />}
 
       {/* Main Content */}

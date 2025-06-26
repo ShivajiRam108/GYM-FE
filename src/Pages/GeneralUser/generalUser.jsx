@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link } from "react-router-dom";
+import { useCookies } from "react-cookie";
 import MemberCard from "../../Components/MemberCard/memberCard";
 import {
   getMonthlyJoined,
@@ -14,45 +15,47 @@ function GeneralUser() {
   const [header, setHeader] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cookies] = useCookies(["token"]);
 
-  useEffect(() => {
+
+
+useEffect(() => {
     const func = sessionStorage.getItem("func");
-    if (func) {
-      fetchData(func);
+    if (func && cookies.token) {
+      fetchData(func, cookies.token);
     }
-  }, []);
+  }, [cookies.token]);
 
-  const fetchData = async (func) => {
+  const fetchData = async (func, token) => {
     setLoading(true);
     try {
       let response;
       switch (func) {
         case "MonthlyJoined":
-          response = await getMonthlyJoined();
+          response = await getMonthlyJoined(token);
           setHeader("Monthly Joined Members");
           break;
         case "threeDaysExpire":
-          response = await threeDaysExpire();
+          response = await threeDaysExpire(token);
           setHeader("Expiring in 3 Days");
           break;
         case "fourToSevenDaysExpire":
-          response = await fourToSevenDaysExpire();
+          response = await fourToSevenDaysExpire(token);
           setHeader("Expiring in 4-7 Days");
           break;
         case "expired":
-          response = await expiredData();
+          response = await expiredData(token);
           setHeader("Expired Members");
           break;
         case "inactiveMembers":
-          response = await inactiveMembers();
+          response = await inactiveMembers(token);
           setHeader("Inactive Members");
           break;
         default:
-          setHeader("Unknown Category");
+          setHeader("Unknown");
           response = { members: [] };
       }
 
-      // ✅ Make sure response and members exist
       setData(response?.members || []);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -61,6 +64,8 @@ function GeneralUser() {
       setLoading(false);
     }
   };
+    
+
 
   return (
     <div className="w-full min-h-screen px-4 py-6 bg-gray-100">

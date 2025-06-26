@@ -6,6 +6,8 @@ import Stack from "@mui/material/Stack";
 import LinearProgress from "@mui/material/LinearProgress";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useCookies } from "react-cookie";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Register({ onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,11 +32,15 @@ function Register({ onSwitch }) {
       toast.error("Please fill in all fields");
       return;
     }
-
+const [cookies] = useCookies['token']
     try {
       const res = await axios.post(
-        "http://localhost:3002/auth/register",
-        inputField
+        `${BASE_URL}/auth/register`,
+        inputField,{
+          headers:{
+            Authorization: `Bearer ${cookies.token}`,
+          }
+        }
       );
       toast.success(res.data.message);
     } catch (err) {

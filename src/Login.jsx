@@ -3,30 +3,52 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useCookies } from 'react-cookie';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-function Login({ onSwitch }) {
+
+function Login({ onSwitch }) {  
+const navigate = useNavigate();
+  const [cookies, setCookie] = useCookies(['token'])
+  // doNotParse: true,
+  // console.log(cookies.token)
+
+
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  
   const [loginField, setLoginField] = useState({ userName: "", password: "" });
 
   const handleLogin = async () => {
     if (!loginField.userName || !loginField.password) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all fields"); 
       return;
     }
-
+    // const token = localStorage.getItem("token")
     try {
-      const res = await axios.post(
-        "http://localhost:3002/auth/login", // Changed to localhost
-        loginField,
-        { withCredentials: true }
-      );
+      const res = await axios.post(`${BASE_URL}/auth/login`, {
+        userName :loginField.userName,
+        password : loginField.password
+      } ,{
+        withCredentials: true,
+       
+      });
+   
+      const token = res.data.gym.token
 
+      setCookie("token", token ,{
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+        sameSite: "None",
+        secure: true
+      });
+      console.log(token)
       localStorage.setItem("gymName", res.data.gym.gymName);
       localStorage.setItem("gymPic", res.data.gym.profilePic);
       sessionStorage.setItem("isLogin", true);
-      localStorage.setItem("token", res.data.token);
 
+      // localStorage.setItem("token", res.data.token);
+
+    
       toast.success("Login Successful!", {
         onClose: () => {
           navigate("/dashboard");
